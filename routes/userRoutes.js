@@ -1,19 +1,20 @@
 import express from "express";
 import User from "../models/user.js";
 import multer from "multer";
-
+import fs from "fs";
+import path from "path";
 
 const router = express.Router();
 
 //setup multer for image upload
 const storage = multer.diskStorage({
-  destination:"uploads/",
-  filename:(req,file,cb)=>{
-    cb(null,`${Date.now()}-${file.originalname}`)
+  destination: "uploads/",
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`)
   }
 })
 
-const upload = multer({storage})
+const upload = multer({ storage })
 
 
 //Get user by mobile
@@ -31,8 +32,8 @@ router.get('/:phone', async (req, res) => {
 });
 
 //create User with Image upload API
-router.post('/',upload.single("profileImage"), async (req, res) => {
-  const {phone, name} = req.body;
+router.post('/', upload.single("profileImage"), async (req, res) => {
+  const { phone, name } = req.body;
   try {
     let user = await User.findOne({ phone });
     if (user) {
@@ -50,4 +51,37 @@ router.post('/',upload.single("profileImage"), async (req, res) => {
 })
 
 
+//update Profile API
+router.put('/:id', upload.single("profileImage"), async (req, res) => {
+  const { name } = req.body
+
+  try {
+    let user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" })
+    }
+
+    if (req.file) {
+      if (user.profileImage) {
+        //remove old image file
+        const oldImagePath = path.join(process.cwd(), user.profileImage)
+        if (fs.existsSync(path.join(oldImagePath))) {
+          fs.unlinkSync(oldImagePath) // delete old image (path)
+        }
+      }
+    }
+
+    user.profileImage = `/uploads/${req.file.filename}`
+
+    //update user name
+    if (name) {
+      user.name = name // new name
+    }
+
+    await user.save();
+    res.status(200).json({ message: "Profile updated successfully", user });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error : ", error: error.message });
+  }
+})
 export default router;
