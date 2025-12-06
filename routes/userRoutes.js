@@ -19,15 +19,24 @@ const upload = multer({ storage })
 
 //Get user by mobile
 router.get('/:phone', async (req, res) => {
-  try {
-    const user = await User.findOne({ phone: req.params.phone })
-
+try {
+    const user = await User.findOne({ phone: req.params.phone });
+    //relative path to absolute path conversion to full URL
+    const profileImageUrl= user && user.profileImage?`${req.protocol}://${req.get('host')}${user.profileImage}`:null;
+   
     if (!user) {
-      return res.status(404).json({ message: "User not found" })
+      return res.status(404).json({ message: "User not found" });
     }
-    res.json(user)
-  } catch (error) {
-    res.status(500).json({ message: "Server Error : ", error: error.message });
+    res.json({
+      _id:user._id,
+      phone:user.phone,
+      name:user.name,
+      profileImage:profileImageUrl
+    })
+    res.json(user); // { _id, phone, name, __v }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -69,9 +78,10 @@ router.put('/:id', upload.single("profileImage"), async (req, res) => {
           fs.unlinkSync(oldImagePath) // delete old image (path)
         }
       }
+       user.profileImage = `/uploads/${req.file.filename}`
     }
 
-    user.profileImage = `/uploads/${req.file.filename}`
+   
 
     //update user name
     if (name) {
