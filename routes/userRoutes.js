@@ -83,7 +83,7 @@ router.put('/:id', upload.single("profileImage"), async (req, res) => {
 
    
 
-    //update user name
+    //update user name 
     if (name) {
       user.name = name // new name
     }
