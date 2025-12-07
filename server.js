@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import userRoutes from "./routes/userRoutes.js"
 import path from "path";
+import {Server} from 'socket.io'
+import registerSocketHandlers from "./socket.js";
 
 dotenv.config();
 const app = express();
@@ -25,6 +27,17 @@ app.get('/', (req, res) => {
 
 app.use('/api/users', userRoutes)
 
-app.listen(PORT, () => {
+
+
+const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+const io = new Server(server,{
+  cors:{
+    origin:"*",
+    methods:["GET","POST"]
+  }
+})
+
+registerSocketHandlers(io);
