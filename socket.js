@@ -1,4 +1,5 @@
 import Conversation from "./models/Conversation.js";
+import Message from "./models/Message.js";
 
 export default function registerSocketHandlers(io) {
     console.log("socket handlers called")
@@ -32,7 +33,24 @@ export default function registerSocketHandlers(io) {
                     conversation = new Conversation({
                         participants: [userId, otherUserId]
                     })
+                await conversation.populate("participants")
                 }
+
+                //Save message
+                const message = new Message({
+                    conversationId:conversation._id,
+                    senderId:userId,
+                    text
+                })
+                
+                
+                await message.save()
+                //update unread count
+                const currentUnread = conversation.unreadCounts.get(otherUserId.toString()) ||0;
+                conversation.unreadCounts.set(otherUserId.toString(),currentUnread+1) 
+
+                //update Last Activity
+                conversation.lastMessage=message
 
                 await conversation.save()
                 socket.to(otherUserId).emit("receive-message", {
