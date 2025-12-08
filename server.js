@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import userRoutes from "./routes/userRoutes.js"
+import conversationRoutes from "./routes/conversationRoutes.js"
 import path from "path";
 import {Server} from 'socket.io'
 import registerSocketHandlers from "./socket.js";
@@ -26,6 +27,7 @@ app.get('/', (req, res) => {
 })
 
 app.use('/api/users', userRoutes)
+app.use('/api/conversation',conversationRoutes)
 
 
 

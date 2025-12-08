@@ -12,7 +12,7 @@ const conversationSchema = new mongoose.Schema({
     unreadCounts:{
         type:Map,
         of:Number,
-        default:""
+        default:{},
     }
 })
 
