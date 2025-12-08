@@ -29,28 +29,28 @@ export default function registerSocketHandlers(io) {
 
                 let isNew = false
                 if (!conversation) {
-                    isNew=true
+                    isNew = true
                     conversation = new Conversation({
                         participants: [userId, otherUserId]
                     })
-                await conversation.populate("participants")
+                    await conversation.populate("participants")
                 }
 
                 //Save message
                 const message = new Message({
-                    conversationId:conversation._id,
-                    senderId:userId,
+                    conversationId: conversation._id,
+                    senderId: userId,
                     text
                 })
-                
-                
+
+
                 await message.save()
                 //update unread count
-                const currentUnread = conversation.unreadCounts.get(otherUserId.toString()) ||0;
-                conversation.unreadCounts.set(otherUserId.toString(),currentUnread+1) 
+                const currentUnread = conversation.unreadCounts.get(otherUserId.toString()) || 0;
+                conversation.unreadCounts.set(otherUserId.toString(), currentUnread + 1)
 
                 //update Last Activity
-                conversation.lastMessage=message
+                conversation.lastMessage = message
 
                 await conversation.save()
                 socket.to(otherUserId).emit("receive-message", {
@@ -64,6 +64,20 @@ export default function registerSocketHandlers(io) {
             }
 
 
+        })
+
+        socket.on("focus-conversation", async (conversationId) => {
+            try {
+                const conversation = await Conversation.findById(conversationId)
+                if (!conversation) {
+                    return
+                }
+                conversation.unreadCounts.set(userId, 0)//OPEN BY WHO - ID
+
+                await conversation.save();
+            } catch (error) {
+                console.log("focus-conversation error :", error)
+            }
         })
     })
 }
